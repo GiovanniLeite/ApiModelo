@@ -1,3 +1,4 @@
+import File from '../models/File';
 import User from '../models/User';
 
 class UserController {
@@ -6,8 +7,16 @@ class UserController {
     try {
       if (req.userAdm === 1) {
         const users = await User.findAll({
-          attributes: ['id', 'name', 'email', 'adm'],
+          order: [
+            ['id', 'DESC'],
+            [File, 'id', 'DESC'],
+          ],
+          include: {
+            model: File,
+            attributes: ['url', 'file_name'],
+          },
         });
+
         return res.json(users);
       } else {
         return res.status(401).json({
@@ -23,9 +32,15 @@ class UserController {
   async show(req, res) {
     try {
       const user = await User.findByPk(req.userId, {
-        attributes: ['id', 'name', 'email', 'adm'],
+        order: [
+          ['id', 'DESC'],
+          [File, 'id', 'DESC'],
+        ],
+        include: {
+          model: File,
+          attributes: ['url', 'file_name'],
+        },
       });
-
       return res.json(user);
     } catch (e) {
       return res.json(null);
@@ -38,12 +53,14 @@ class UserController {
       if (req.userAdm === 1) {
         const newUser = await User.create(req.body);
         newUser.password_hash = '';
+        newUser.password = '';
         return res.json(newUser);
       } else {
         const newReqBody = req.body;
         newReqBody.adm = 0;
         const newUser = await User.create(newReqBody);
         newUser.password_hash = '';
+        newUser.password = '';
         return res.json(newUser);
       }
     } catch (e) {
